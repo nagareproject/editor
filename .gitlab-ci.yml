@@ -15,10 +15,8 @@ tests2:
   script:
     - pip2 install flake8 'pytest<5' .
     - flake8 nagare
-    - pytest
 
 tests3:
   script:
   - pip3 install flake8 pytest .
   - flake8 nagare
-  - pytest
