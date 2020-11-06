@@ -74,6 +74,10 @@ class Var(object):
         """
         return self.get()
 
+    def __bool__(self):
+        return bool(self.input)
+    __nonzero__ = __bool__
+
     def __str__(self):
         return str(self.get())
 
