@@ -95,6 +95,8 @@ class Editor(object):
     validating function, and will modified the target object only if all
     the validating functions are passed ok.
     """
+    property_factory = Property
+
     def __init__(self, target, properties_to_create=()):
         """Initialisation
 
@@ -122,7 +124,7 @@ class Editor(object):
         setattr(target, name, value)
 
     def create_property(self, name, value):
-        setattr(self, name, Property(value))
+        setattr(self, name, self.property_factory(value))
 
     def is_validated(self, properties_to_validate):
         """Check the validity of a set of properties
