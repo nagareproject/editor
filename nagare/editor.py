@@ -106,6 +106,7 @@ class Editor(object):
             target object, then to write into
         """
         self.target = target
+        self.properties_to_commit = properties_to_create
 
         for name in properties_to_create:
             # Create a property with the same name and value than the attribute
@@ -134,7 +135,7 @@ class Editor(object):
         """
         return all(getattr(self, name).error is None for name in properties_to_validate)
 
-    def commit(self, properties_to_commit=(), properties_to_validate=()):
+    def commit(self, properties_to_commit=None, properties_to_validate=()):
         """Write back the value of the property to the target object, only if
         they are all valid
 
@@ -146,6 +147,8 @@ class Editor(object):
         Return:
           - are all the properties valid ?
         """
+        properties_to_commit = self.properties_to_commit if properties_to_commit is None else properties_to_commit
+
         validated = self.is_validated(set(properties_to_commit) | set(properties_to_validate))
 
         if validated:
