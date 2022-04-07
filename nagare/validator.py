@@ -142,7 +142,7 @@ class ValidatorBase(with_metaclass(DualCallable)):
 class Validator(ValidatorBase):
     """Base class for the validation objects
     """
-    def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None):
+    def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None, msg=_L('Input must be a string')):
         """Initialization
 
         This object only do conversions, possibly removing characters at the
@@ -156,7 +156,7 @@ class Validator(ValidatorBase):
           - ``chars`` -- list of characters to removed, spaces by default
         """
         if not isinstance(v, (str, type(u''))):
-            raise ValueError('Input must be a string')
+            raise ValueError(msg)
 
         if strip:
             v = v.strip(chars)
@@ -173,7 +173,7 @@ class Validator(ValidatorBase):
 class IntValidator(Validator):
     """Conversion and validation of integers
     """
-    def __init__(self, v, base=10, msg=i18n._L('Must be an integer'), *args, **kw):
+    def __init__(self, v, base=10, msg=_L('Must be an integer'), *args, **kw):
         """Initialisation
 
         Check that the value is an integer
