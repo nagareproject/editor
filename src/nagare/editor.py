@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2022 Net-ng.
+# Copyright (c) 2008-2023 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -7,13 +7,13 @@
 # this distribution.
 # --
 
-"""Helpers to validate form datum"""
+"""Helpers to validate form datum."""
 
 from nagare import var
 
 
 class Property(var.Var):
-    """An editor property
+    """An editor property.
 
     An editor property has:
 
@@ -24,8 +24,9 @@ class Property(var.Var):
       - the message of the last validation error or ``None`` if the current value
         is valid
     """
+
     def __init__(self, v=None):
-        """Initialisation
+        """Initialisation.
 
         Members are:
 
@@ -40,18 +41,18 @@ class Property(var.Var):
 
     @staticmethod
     def _validate(input):
-        """Default validation function
+        """Default validation function.
 
         In:
           - ``input`` -- value to validate
 
-        Return
+        Return:
           - ``input``
         """
         return input
 
     def validate(self, f):
-        """Set the validating function
+        """Set the validating function.
 
         In:
           - ``f`` -- the validating function. Called with the value to
@@ -66,7 +67,7 @@ class Property(var.Var):
         return self
 
     def set(self, input):
-        """Set the values
+        """Set the values.
 
         Always set the current value but only the valid value if the validating
         function return OK
@@ -74,7 +75,6 @@ class Property(var.Var):
         In:
           - ``input`` -- the input string or ``cgi.FieldStorage`` object
         """
-
         if not hasattr(input, 'file'):
             super(Property, self).set(input)
 
@@ -88,17 +88,17 @@ class Property(var.Var):
 
 
 class Editor(object):
-    """An editor object act as a buffer between the datum received from a
-    form an the target object.
+    """An editor object act as a buffer between the datum received from a form an the target object.
 
     An editor object has a set of editor properties, each with a possible
     validating function, and will modified the target object only if all
     the validating functions are passed ok.
     """
+
     property_factory = Property
 
     def __init__(self, target, properties_to_create=()):
-        """Initialisation
+        """Initialisation.
 
         Create the set of properties from some attributes of the target object
 
@@ -127,19 +127,18 @@ class Editor(object):
         setattr(self, name, self.property_factory(value))
 
     def is_validated(self, properties_to_validate):
-        """Check the validity of a set of properties
+        """Check the validity of a set of properties.
 
         In:
           - ``properties_to_validate`` -- name of the properties to validate
 
-        Return
+        Return:
           - a boolean
         """
         return all(getattr(self, name).error is None for name in properties_to_validate)
 
-    def commit(self, properties_to_commit=None, properties_to_validate=()):
-        """Write back the value of the property to the target object, only if
-        they are all valid
+    def commit(self, properties_to_commit=None, properties_to_validate=(), validation=True):
+        """Write back the value of the property to the target object, only if they are all valid.
 
         In:
           - ``properties_to_commit`` -- names of properties to check then to
@@ -151,8 +150,7 @@ class Editor(object):
         """
         properties_to_commit = self.properties_to_commit if properties_to_commit is None else properties_to_commit
 
-        validated = self.is_validated(set(properties_to_commit) | set(properties_to_validate))
-
+        validated = (self.is_validated(set(properties_to_commit) | set(properties_to_validate))) if validation else True
         if validated:
             for name in properties_to_commit:
                 self.write_value(self.target, name, getattr(self, name).value)

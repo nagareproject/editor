@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2022 Net-ng.
+# Copyright (c) 2008-2023 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -7,10 +7,11 @@
 # this distribution.
 # --
 
-"""Variables with a functional interface:
+"""Variables with a functional interface.
 
-  - ``v()`` -- return the value of ``v``
-  - ``v(x)`` -- set the value of ``v`` to ``x``
+  API :
+    - ``v()`` -- return the value of ``v``
+    - ``v(x)`` -- set the value of ``v`` to ``x``
 
 For example:
 
@@ -23,10 +24,10 @@ _marker = object()
 
 
 class Var(object):
-    """Functional variables
-    """
+    """Functional variables."""
+
     def __init__(self, v=None):
-        """Initialisation
+        """Initialisation.
 
         In:
           - ``v`` -- initial value
@@ -34,7 +35,7 @@ class Var(object):
         self.input = v
 
     def get(self):
-        """Return the value
+        """Return the value.
 
         Return:
           - the value
@@ -42,7 +43,7 @@ class Var(object):
         return self.input
 
     def set(self, v):
-        """Set the value
+        """Set the value.
 
         Return:
           - the value
@@ -50,7 +51,7 @@ class Var(object):
         self.input = v
 
     def __call__(self, v=_marker):
-        """Return or set the value
+        """Return or set the value.
 
         In:
           - ``v`` -- if given, ``v`` becomes the new value
@@ -64,7 +65,7 @@ class Var(object):
         return self.get()
 
     def render(self, renderer):
-        """When directly put into a XML tree, render its value
+        """When directly put into a XML tree, render its value.
 
         In:
           - ``renderer`` -- the current renderer
@@ -76,6 +77,7 @@ class Var(object):
 
     def __bool__(self):
         return bool(self.input)
+
     __nonzero__ = __bool__
 
     def __str__(self):

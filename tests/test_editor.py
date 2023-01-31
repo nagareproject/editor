@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2022 Net-ng.
+# Copyright (c) 2008-2023 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -34,7 +34,7 @@ class MyApp:
 
 
 def test1():
-    """ Form - validation OK """
+    """Form - validation OK"""
     o = MyApp()
 
     assert o.name == 'Foo'
@@ -64,7 +64,7 @@ def test1():
 
 
 def test2():
-    """ Form - validation KO """
+    """Form - validation KO"""
     o = MyApp()
 
     assert o.name == 'Foo'
@@ -114,7 +114,7 @@ class MyStringEditor1(MyStringEditor):
 
 
 def test4():
-    """ Form - test string validators - not_empty """
+    """Form - test string validators - not_empty"""
     editor = MyStringEditor1(MyApp())
 
     # Validation OK
@@ -133,11 +133,13 @@ def test4():
 class MyStringEditor2(MyStringEditor):
     def __init__(self, source):
         super(MyStringEditor2, self).__init__(source)
-        self.name.validate(lambda v: validator.to_string(v, strip=True).match(r'^[a-d]+$', msg="test5 - Incorrect format"))
+        self.name.validate(
+            lambda v: validator.to_string(v, strip=True).match(r'^[a-d]+$', msg="test5 - Incorrect format")
+        )
 
 
 def test5():
-    """ Form - test string validators - match """
+    """Form - test string validators - match"""
     editor = MyStringEditor2(MyApp())
 
     # Validation OK
@@ -156,11 +158,15 @@ def test5():
 class MyStringEditor3(MyStringEditor):
     def __init__(self, source):
         super(MyStringEditor3, self).__init__(source)
-        self.name.validate(lambda v: validator.to_string(v, strip=True).shorter_than(5, msg="test6 - Length must be shorter than %(max)d characters"))
+        self.name.validate(
+            lambda v: validator.to_string(v, strip=True).shorter_than(
+                5, msg="test6 - Length must be shorter than %(max)d characters"
+            )
+        )
 
 
 def test6():
-    """ Form - test string validators - shorter_than """
+    """Form - test string validators - shorter_than"""
     editor = MyStringEditor3(MyApp())
 
     # Validation OK
@@ -179,11 +185,15 @@ def test6():
 class MyStringEditor4(MyStringEditor):
     def __init__(self, source):
         super(MyStringEditor4, self).__init__(source)
-        self.name.validate(lambda v: validator.to_string(v, strip=True).length_equal(5, msg="test7 - Length must be %(len)d characters"))
+        self.name.validate(
+            lambda v: validator.to_string(v, strip=True).length_equal(
+                5, msg="test7 - Length must be %(len)d characters"
+            )
+        )
 
 
 def test7():
-    """ Form - test string validators - length_equal  """
+    """Form - test string validators - length_equal"""
     editor = MyStringEditor4(MyApp())
 
     # Validation OK
@@ -208,11 +218,17 @@ def test7():
 class MyStringEditor5(MyStringEditor):
     def __init__(self, source):
         super(MyStringEditor5, self).__init__(source)
-        self.name.validate(lambda v: validator.to_string(v, strip=True).longer_than(5).shorter_or_equal_than(8).not_empty().match(r'^[1-9]+$'))
+        self.name.validate(
+            lambda v: validator.to_string(v, strip=True)
+            .longer_than(5)
+            .shorter_or_equal_than(8)
+            .not_empty()
+            .match(r'^[1-9]+$')
+        )
 
 
 def test8():
-    """ Form - test string validators - multiple validators """
+    """Form - test string validators - multiple validators"""
     editor = MyStringEditor5(MyApp())
 
     # Validation OK

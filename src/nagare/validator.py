@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2022 Net-ng.
+# Copyright (c) 2008-2023 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -7,22 +7,20 @@
 # this distribution.
 # --
 
-"""Set of validating objects
+"""Set of validating objects.
 
 Suitable to be the validating functions of ``editor.property`` objects
 """
 
-import re
 import functools
+import re
 
 from nagare import i18n
-
 
 _L = functools.partial(i18n._L, domain='nagare')
 
 
 def with_metaclass(meta):
-
     class metaclass(type):
         def __new__(cls, name, bases, d):
             return meta(name, (object,), d)
@@ -35,17 +33,17 @@ def with_metaclass(meta):
 
 
 class DualCallable(type):
-    """"A hackish metaclass to allow both direct and deferred calls of methods
+    """A hackish metaclass to allow both direct and deferred calls of methods.
 
     For compatibility with the old and new way to built a validation chain.
 
     Examples:
-
       - Old validation with direct calls: valid = lambda v: IntValidator(v).greater_than(10)
       - New validation with lazy calls: valid = IntValidator().greater_than(10)
     """
+
     def __new__(cls, name, bases, ns):
-        """Class Initialization
+        """Class Initialization.
 
         Wrap all the methods in ``ns``
 
@@ -63,6 +61,7 @@ class DualCallable(type):
                 def _(m):
                     def f(self, *args, **kw):
                         return self._call_or_defer(m, *args, **kw)
+
                     functools.update_wrapper(f, m)
                     return f
 
@@ -72,18 +71,17 @@ class DualCallable(type):
 
 
 class ValidatorBase(with_metaclass(DualCallable)):
-    """"A hackish base class to allow both direct and deferred calls of methods
+    """A hackish base class to allow both direct and deferred calls of methods.
 
     For compatibility with the old and new way to built a validation chain.
 
     Examples:
-
       - Old validation with direct calls: valid = lambda v: IntValidator(v).greater_than(10)
       - New validation with lazy calls: valid = IntValidator().greater_than(10)
     """
 
     def __new__(cls, v=None, *args, **kw):
-        """Method called before ``__init__``
+        """Method called before ``__init__``.
 
         If a ``v`` value is passed, all the methods will be directly called
         else, the method calls will be recorded and called later
@@ -101,7 +99,7 @@ class ValidatorBase(with_metaclass(DualCallable)):
         return o
 
     def _call_or_defer(self, _method, *args, **kw):
-        """Directly call or record the call to a method
+        """Directly call or record the call to a method.
 
         In:
           - ``_method`` -- method to call (keyword parameter)
@@ -116,7 +114,7 @@ class ValidatorBase(with_metaclass(DualCallable)):
         return _method(self, *args, **kw)
 
     def __call__(self, v=None):
-        """Return the already validated value or call now all the deferred methods
+        """Return the already validated value or call now all the deferred methods.
 
         In:
           - ``v`` -- optional value to validate
@@ -140,10 +138,10 @@ class ValidatorBase(with_metaclass(DualCallable)):
 
 
 class Validator(ValidatorBase):
-    """Base class for the validation objects
-    """
+    """Base class for the validation objects."""
+
     def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None, msg=_L('Input must be a string')):
-        """Initialization
+        """Initialization.
 
         This object only do conversions, possibly removing characters at the
         beginning / end of the value
@@ -171,10 +169,10 @@ class Validator(ValidatorBase):
 
 
 class IntValidator(Validator):
-    """Conversion and validation of integers
-    """
+    """Conversion and validation of integers."""
+
     def __init__(self, v, base=10, msg=_L('Must be an integer'), *args, **kw):
-        """Initialisation
+        """Initialisation.
 
         Check that the value is an integer
 
@@ -191,7 +189,7 @@ class IntValidator(Validator):
     to_int = Validator.__call__
 
     def lesser_than(self, max, msg=_L('Must be lesser than %(max)d')):
-        """Check that the value is lesser than a limit
+        """Check that the value is lesser than a limit.
 
         In:
           - ``max`` -- the limit
@@ -206,7 +204,7 @@ class IntValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'max': max})
 
     def lesser_or_equal_than(self, max, msg=_L('Must be lesser or equal than %(max)d')):
-        """Check that the value is lesser or equal than a limit
+        """Check that the value is lesser or equal than a limit.
 
         In:
           - ``max`` -- the limit
@@ -221,7 +219,7 @@ class IntValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'max': max})
 
     def greater_than(self, min, msg=_L('Must be greater than %(min)d')):
-        """Check that the value is greater than a limit
+        """Check that the value is greater than a limit.
 
         In:
           - ``max`` -- the limit
@@ -236,7 +234,7 @@ class IntValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'min': min})
 
     def greater_or_equal_than(self, min, msg=_L('Must be greater or equal than %(min)d')):
-        """Check that the value is greater or equal than a limit
+        """Check that the value is greater or equal than a limit.
 
         In:
           - ``max`` -- the limit
@@ -252,12 +250,12 @@ class IntValidator(Validator):
 
 
 class StringValidator(Validator):
-    """Conversion and validation of string
-    """
+    """Conversion and validation of string."""
+
     to_string = Validator.__call__
 
     def to_int(self, base=10):
-        """Return the value, converted to an integer
+        """Return the value, converted to an integer.
 
         In:
           - ``base`` -- base for the conversion
@@ -269,7 +267,7 @@ class StringValidator(Validator):
         return self.value
 
     def not_empty(self, msg=_L("Can't be empty")):
-        """Check that the value is not empty
+        """Check that the value is not empty.
 
         In:
           - ``msg`` -- message to raise
@@ -283,7 +281,7 @@ class StringValidator(Validator):
         raise ValueError(msg)
 
     def match(self, r, msg=_L('Incorrect format')):
-        """Check that the value respects a format given as a regexp
+        """Check that the value respects a format given as a regexp.
 
         In:
           - ``r`` -- the regexp
@@ -298,7 +296,7 @@ class StringValidator(Validator):
         raise ValueError(msg % {'value': self.value})
 
     def shorter_than(self, max, msg=_L('Length must be shorter than %(max)d characters')):
-        """Check that the value is shorter than a limit
+        """Check that the value is shorter than a limit.
 
         In:
           - ``max`` -- the limit
@@ -313,7 +311,7 @@ class StringValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'max': max})
 
     def shorter_or_equal_than(self, max, msg=_L('Length must be shorter or equal than %(max)d characters')):
-        """Check that the value is shorter or equal than a limit
+        """Check that the value is shorter or equal than a limit.
 
         In:
           - ``max`` -- the limit
@@ -328,7 +326,7 @@ class StringValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'max': max})
 
     def length_equal(self, v, msg=_L('Length must be %(len)d characters')):
-        """Check that the value has an exact length
+        """Check that the value has an exact length.
 
         In:
           - ``v`` -- the length
@@ -343,7 +341,7 @@ class StringValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'len': v})
 
     def longer_than(self, min, msg=_L('Length must be longer than %(min)d characters')):
-        """Check that the value is longer than a limit
+        """Check that the value is longer than a limit.
 
         In:
           - ``min`` -- the limit
@@ -358,7 +356,7 @@ class StringValidator(Validator):
         raise ValueError(msg % {'value': self.value, 'min': min})
 
     def longer_or_equal_than(self, min, msg=_L('Length must be longer or equal than %(min)d characters')):
-        """Check that the value is longer or equal than a limit
+        """Check that the value is longer or equal than a limit.
 
         In:
           - ``min`` -- the limit
