@@ -13,7 +13,6 @@ Suitable to be the validating functions of ``editor.property`` objects
 """
 
 import re
-import sys
 import functools
 
 from nagare import i18n
@@ -57,8 +56,7 @@ class DualCallable(type):
         }
         ns['_dual'] = validator
 
-        validator._dual = super().__new__(cls, name + 'Dual', (DualValidator,), ns)
-        setattr(sys.modules[validator.__module__], name + 'Dual', validator._dual)
+        globals()[name + 'Dual'] = validator._dual = super().__new__(cls, name + 'Dual', (DualValidator,), ns)
 
         return validator
 
