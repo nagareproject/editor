@@ -12,24 +12,15 @@
 Suitable to be the validating functions of ``editor.property`` objects
 """
 
-import functools
 import re
+import sys
+import functools
 
 from nagare import i18n
 
 _L = functools.partial(i18n._L, domain='nagare')
 
-
-def with_metaclass(meta):
-    class metaclass(type):
-        def __new__(cls, name, bases, d):
-            return meta(name, (object,), d)
-
-        @classmethod
-        def __prepare__(cls, name, bases):
-            return meta.__prepare__(name, (object,))
-
-    return type.__new__(metaclass, 'temporary_class', (), {})
+_marker = object()
 
 
 class DualCallable(type):
@@ -38,14 +29,14 @@ class DualCallable(type):
     For compatibility with the old and new way to built a validation chain.
 
     Examples:
-      - Old validation with direct calls: valid = lambda v: IntValidator(v).greater_than(10)
+      - Old validation with direct calls: valid = lambda v: IntValidator(v).greater_than(10).to_int()
       - New validation with lazy calls: valid = IntValidator().greater_than(10)
     """
 
     def __new__(cls, name, bases, ns):
         """Class Initialization.
 
-        Wrap all the methods in ``ns``
+        Create a dual class too
 
         In:
           - ``name`` -- name of the class to create
@@ -55,90 +46,46 @@ class DualCallable(type):
         Return:
           - a new class
         """
-        for method_name, method in ns.items():
-            if callable(method) and (method_name == '__init__' or not method_name.startswith('_')):
+        validator = super().__new__(cls, name, bases, ns)
 
-                def _(m):
-                    def f(self, *args, **kw):
-                        return self._call_or_defer(m, *args, **kw)
+        ns = {
+            method_name: (
+                lambda method: functools.wraps(method)(lambda self, *args, **kw: self._defer_call(method, args, kw))
+            )(method)
+            for method_name, method in ns.items()
+            if callable(method) and not method_name.startswith('_')
+        }
+        ns['_dual'] = validator
 
-                    functools.update_wrapper(f, m)
-                    return f
+        validator._dual = super().__new__(cls, name + 'Dual', (DualValidator,), ns)
+        setattr(sys.modules[validator.__module__], name + 'Dual', validator._dual)
 
-                ns[method_name] = _(method)
-
-        return super(DualCallable, cls).__new__(cls, name, bases, ns)
-
-
-class ValidatorBase(with_metaclass(DualCallable)):
-    """A hackish base class to allow both direct and deferred calls of methods.
-
-    For compatibility with the old and new way to built a validation chain.
-
-    Examples:
-      - Old validation with direct calls: valid = lambda v: IntValidator(v).greater_than(10)
-      - New validation with lazy calls: valid = IntValidator().greater_than(10)
-    """
-
-    def __new__(cls, v=None, *args, **kw):
-        """Method called before ``__init__``.
-
-        If a ``v`` value is passed, all the methods will be directly called
-        else, the method calls will be recorded and called later
-
-        In:
-          - ``v`` -- optional value to validate
-          - ``args``, ``kw`` -- ``__init__`` parameters
-
-        Return:
-          - an instance
-        """
-        o = super(ValidatorBase, cls).__new__(cls)
-        o._defer = v is None
-        o._methods_chain = []
-        return o
-
-    def _call_or_defer(self, _method, *args, **kw):
-        """Directly call or record the call to a method.
-
-        In:
-          - ``_method`` -- method to call (keyword parameter)
-          - ``args``, ``kw`` -- parameters of ``_method``
-        """
-        if self._defer:
-            # Record the call to the method
-            self._methods_chain.append((_method, args, kw))
-            return None if _method.__name__ == '__init__' else self
-
-        # Directly call the method
-        return _method(self, *args, **kw)
-
-    def __call__(self, v=None):
-        """Return the already validated value or call now all the deferred methods.
-
-        In:
-          - ``v`` -- optional value to validate
-
-        Return:
-          - the final result of all the calls
-        """
-        if self._defer:
-            self._defer = False
-
-            try:
-                method, args, kw = self._methods_chain[0]
-                method(self, v, *args, **kw)
-
-                for method, args, kw in self._methods_chain[1:]:
-                    method(self, *args, **kw)
-            finally:
-                self._defer = True
-
-        return self.value
+        return validator
 
 
-class Validator(ValidatorBase):
+class DualValidator:
+    _dual = None
+
+    def __init__(self):
+        self._calls = []
+
+    def _defer_call(self, method, args, kw):
+        self._calls.append((method, args, kw))
+        return self
+
+    def __call__(self, value):
+        validator = self._dual(value)
+        for f, args, kw in self._calls:
+            f(validator, *args, **kw)
+
+        return validator()
+
+
+class Validator(metaclass=DualCallable):
     """Base class for the validation objects."""
+
+    def __new__(cls, v=_marker, *args, **kw):
+        return super().__new__(cls) if v is not _marker else cls._dual()
 
     def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None, msg=_L('Input must be a string')):
         """Initialization.
@@ -153,7 +100,7 @@ class Validator(ValidatorBase):
           - ``lstrip`` -- remove the characters at the beginning
           - ``chars`` -- list of characters to removed, spaces by default
         """
-        if not isinstance(v, (str, type(u''))):
+        if not isinstance(v, str):
             raise ValueError(msg)
 
         if strip:
@@ -166,6 +113,9 @@ class Validator(ValidatorBase):
             v = v.lstrip(chars)
 
         self.value = v
+
+    def __call__(self):
+        return self.value
 
 
 class IntValidator(Validator):
