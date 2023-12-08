@@ -13,6 +13,7 @@ Suitable to be the validating functions of ``editor.property`` objects
 """
 
 import re
+import sys
 import functools
 
 from nagare import i18n
@@ -47,24 +48,32 @@ class DualCallable(type):
         """
         validator = super().__new__(cls, name, bases, ns)
 
-        ns = {
-            method_name: (
-                lambda method: functools.wraps(method)(lambda self, *args, **kw: self._defer_call(method, args, kw))
-            )(method)
-            for method_name, method in ns.items()
-            if callable(method) and not method_name.startswith('_')
-        }
-        ns['_dual'] = validator
+        dual = super().__new__(
+            cls,
+            name + 'Dual',
+            tuple(getattr(sys.modules[base.__module__], base.__name__ + 'Dual') for base in bases),
+            {
+                method_name: (
+                    lambda method: functools.wraps(method)(lambda self, *args, **kw: self._defer_call(method, args, kw))
+                )(method)
+                for method_name, method in ns.items()
+                if callable(method) and not method_name.startswith('_')
+            },
+        )
 
-        globals()[name + 'Dual'] = validator._dual = super().__new__(cls, name + 'Dual', (DualValidator,), ns)
+        dual._dual = validator
+        validator._dual = dual
+        setattr(sys.modules[validator.__module__], name + 'Dual', dual)
 
         return validator
 
 
-class DualValidator:
+class ValidatorBaseDual:
     _dual = None
 
-    def __init__(self):
+    def __init__(self, *args, **kw):
+        self.init_args = args
+        self.init_kw = kw
         self._calls = []
 
     def _defer_call(self, method, args, kw):
@@ -72,24 +81,24 @@ class DualValidator:
         return self
 
     def __call__(self, value):
-        validator = self._dual(value)
+        validator = self._dual(value, *self.init_args, **self.init_kw)
         for f, args, kw in self._calls:
             f(validator, *args, **kw)
 
         return validator()
 
 
-class ValidatorBase(metaclass=DualCallable):
+class ValidatorBase:
     """Base class for the validation objects."""
 
     def __new__(cls, v=_marker, *args, **kw):
-        return super().__new__(cls) if v is not _marker else cls._dual()
+        return super().__new__(cls) if v is not _marker else cls._dual(*args, **kw)
 
     def __call__(self):
         return self.value
 
 
-class Validator(ValidatorBase):
+class Validator(ValidatorBase, metaclass=DualCallable):
     def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None, msg=_L('Input must be a string')):
         """Initialization.
 
