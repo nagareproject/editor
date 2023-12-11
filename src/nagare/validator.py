@@ -61,8 +61,10 @@ class DualCallable(type):
             },
         )
 
+        dual.__module__ = validator.__module__
         dual._dual = validator
         validator._dual = dual
+
         setattr(sys.modules[validator.__module__], name + 'Dual', dual)
 
         return validator
