@@ -48,24 +48,27 @@ class DualCallable(type):
         """
         validator = super().__new__(cls, name, bases, ns)
 
-        dual = super().__new__(
-            cls,
-            name + 'Dual',
-            tuple(getattr(sys.modules[base.__module__], base.__name__ + 'Dual') for base in bases),
-            {
-                method_name: (
-                    lambda method: functools.wraps(method)(lambda self, *args, **kw: self._defer_call(method, args, kw))
-                )(method)
-                for method_name, method in ns.items()
-                if callable(method) and not method_name.startswith('_')
-            },
-        )
+        if name != 'ValidatorBase':
+            dual = super().__new__(
+                cls,
+                name + 'Dual',
+                tuple(getattr(sys.modules[base.__module__], base.__name__ + 'Dual') for base in bases),
+                {
+                    method_name: (
+                        lambda method: functools.wraps(method)(
+                            lambda self, *args, **kw: self._defer_call(method, args, kw)
+                        )
+                    )(method)
+                    for method_name, method in ns.items()
+                    if callable(method) and not method_name.startswith('_')
+                },
+            )
 
-        dual.__module__ = validator.__module__
-        dual._dual = validator
-        validator._dual = dual
+            dual.__module__ = validator.__module__
+            dual._dual = validator
+            validator._dual = dual
 
-        setattr(sys.modules[validator.__module__], name + 'Dual', dual)
+            setattr(sys.modules[validator.__module__], name + 'Dual', dual)
 
         return validator
 
@@ -90,17 +93,20 @@ class ValidatorBaseDual:
         return validator()
 
 
-class ValidatorBase:
+class ValidatorBase(metaclass=DualCallable):
     """Base class for the validation objects."""
 
     def __new__(cls, v=_marker, *args, **kw):
         return super().__new__(cls) if v is not _marker else cls._dual(*args, **kw)
 
+    def __init__(self, v):
+        self.value = v
+
     def __call__(self):
         return self.value
 
 
-class Validator(ValidatorBase, metaclass=DualCallable):
+class Validator(ValidatorBase):
     def __init__(self, v, strip=False, rstrip=False, lstrip=False, chars=None, msg=_L('Input must be a string')):
         """Initialization.
 
@@ -126,7 +132,7 @@ class Validator(ValidatorBase, metaclass=DualCallable):
         if lstrip:
             v = v.lstrip(chars)
 
-        self.value = v
+        super().__init__(v)
 
 
 class IntValidator(Validator):
