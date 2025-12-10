@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2024 Net-ng.
+# Copyright (c) 2014-2025 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -19,10 +19,9 @@ class Property(var.Var):
 
       - a current value: this value is always set
       - a valid value: this value is only set if the validating function has validated it
-      - a validating function: a function that raise an exception if the value
+      - a validating function: a function that raise an ``ValueError`` exception if the value
         is invalid else, return the value to set
-      - the message of the last validation error or ``None`` if the current value
-        is valid
+      - the message of the last validation error or ``None`` if the current value is valid
     """
 
     def __init__(self, v=None):
@@ -34,7 +33,7 @@ class Property(var.Var):
           - ``self.value`` -- the last valid value
           - ``self.error`` -- the last error message
         """
-        super(Property, self).__init__(v)
+        super().__init__(v)
 
         self.value = v
         self.error = None
@@ -76,7 +75,7 @@ class Property(var.Var):
           - ``input`` -- the input string or ``cgi.FieldStorage`` object
         """
         if not hasattr(input, 'file'):
-            super(Property, self).set(input)
+            super().set(input)
 
         try:
             self.value = self._validate(input)  # Call the validating function

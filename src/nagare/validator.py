@@ -1,5 +1,5 @@
 # --
-# Copyright (c) 2008-2024 Net-ng.
+# Copyright (c) 2014-2025 Net-ng.
 # All rights reserved.
 #
 # This software is licensed under the BSD License, as described in
@@ -146,7 +146,7 @@ class IntValidator(Validator):
         In:
           - ``v`` -- value to validate
         """
-        super(IntValidator, self).__init__(v, *args, **kw)
+        super().__init__(v, *args, **kw)
 
         try:
             self.value = int(self.value, base)
@@ -247,7 +247,7 @@ class StringValidator(Validator):
 
         raise ValueError(msg)
 
-    def match(self, r, msg=_L('Incorrect format')):
+    def match(self, r, flags=0, msg=_L('Incorrect format')):
         """Check that the value respects a format given as a regexp.
 
         In:
@@ -257,7 +257,7 @@ class StringValidator(Validator):
         Return:
           - ``self``
         """
-        if re.match(r, self.value):
+        if re.match(r, self.value, flags):
             return self
 
         raise ValueError(msg % {'value': self.value})
