@@ -23,7 +23,7 @@ Handy into the lambda expressions
 _marker = object()
 
 
-class Var(object):
+class Var:
     """Functional variables."""
 
     def __init__(self, v=None):

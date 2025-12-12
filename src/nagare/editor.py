@@ -86,7 +86,7 @@ class Property(var.Var):
             self.error = data.args[0]
 
 
-class Editor(object):
+class Editor:
     """An editor object act as a buffer between the datum received from a form an the target object.
 
     An editor object has a set of editor properties, each with a possible
